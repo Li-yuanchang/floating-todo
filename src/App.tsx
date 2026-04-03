@@ -111,6 +111,14 @@ export default function App() {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+    if (showRunningList && runningListRef.current) {
+      requestAnimationFrame(() => {
+        if (runningListRef.current) {
+          const panelH = barH + 4 + runningListRef.current.scrollHeight + 4;
+          appWindow.setSize(new LogicalSize(collapsedBarW, panelH)).catch(() => {});
+        }
+      });
+    }
   };
   const [toast, setToast] = useState<string | null>(null);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
@@ -164,6 +172,7 @@ export default function App() {
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const textMeasureRef = useRef<HTMLDivElement>(null);
+  const runningListRef = useRef<HTMLDivElement>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const resizingRef = useRef(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -922,7 +931,7 @@ export default function App() {
         </div>
       )}
       {showRunningList && !inlineMode && (
-        <div className="add-panel" style={{ background: barStyle.background, backdropFilter: barStyle.backdropFilter, WebkitBackdropFilter: barStyle.WebkitBackdropFilter }}>
+        <div className="add-panel" ref={runningListRef} style={{ background: barStyle.background, backdropFilter: barStyle.backdropFilter, WebkitBackdropFilter: barStyle.WebkitBackdropFilter }}>
           {sortedRunning.map((t) => (
             <div
               key={t.id}
