@@ -1367,7 +1367,7 @@ export default function App() {
                     <span>{calSelectedDay} · {calDayTodos.length}条待办</span>
                     <button className="expand-toggle-btn" onClick={() => {
                       const allIds = calDayTodos.map(t => t.id);
-                      const allExpanded = allIds.every(id => expandedTitleIds.has(id));
+                      const allExpanded = allIds.length > 0 && allIds.every(id => expandedTitleIds.has(id));
                       setExpandedTitleIds(prev => {
                         const next = new Set(prev);
                         if (allExpanded) { allIds.forEach(id => next.delete(id)); }
@@ -1375,8 +1375,10 @@ export default function App() {
                         return next;
                       });
                     }}>
-                      {calDayTodos.every(t => expandedTitleIds.has(t.id)) ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
-                      {calDayTodos.every(t => expandedTitleIds.has(t.id)) ? "收起" : "展开"}
+                      {(() => {
+                        const allExp = calDayTodos.length > 0 && calDayTodos.every(t => expandedTitleIds.has(t.id));
+                        return <>{allExp ? <ChevronRight size={11} /> : <ChevronDown size={11} />}{allExp ? "收起" : "展开"}</>;
+                      })()}
                     </button>
                   </div>
                   {calDayTodos.map((t) => (
