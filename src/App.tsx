@@ -102,6 +102,7 @@ export default function App() {
   const [inlineText, setInlineText] = useState("");
   const [completeIds, setCompleteIds] = useState<Set<number>>(new Set());
   const [showRunningList, setShowRunningList] = useState(false);
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -1313,7 +1314,12 @@ export default function App() {
                   {calDayTodos.map((t) => (
                     <div key={t.id} className="cal-todo-row">
                       <div className="cal-todo-info">
-                        <span className="cal-todo-title">{t.title}</span>
+                        <span className={`cal-todo-title ${expandedIds.has(t.id) ? "expanded" : ""}`}
+                          onClick={() => setExpandedIds(prev => {
+                            const next = new Set(prev);
+                            next.has(t.id) ? next.delete(t.id) : next.add(t.id);
+                            return next;
+                          })}>{t.title}</span>
                         <span className="cal-todo-meta">
                           {t.timer_elapsed_sec > 0 && formatTime(t.timer_elapsed_sec)}
                           {t.status === "archived" && " · 已归档"}
@@ -1368,13 +1374,30 @@ export default function App() {
           </div>
 
           <div className="todo-list">
+            {(activeTodos.length + completedTodos.length) > 0 && (
+              <div className="list-toolbar">
+                <button className="expand-toggle-btn" onClick={() => {
+                  const allIds = [...activeTodos, ...completedTodos].map(t => t.id);
+                  const allExpanded = allIds.every(id => expandedIds.has(id));
+                  setExpandedIds(allExpanded ? new Set() : new Set(allIds));
+                }}>
+                  {[...activeTodos, ...completedTodos].every(t => expandedIds.has(t.id)) ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
+                  {[...activeTodos, ...completedTodos].every(t => expandedIds.has(t.id)) ? "全部收起" : "全部展开"}
+                </button>
+              </div>
+            )}
             {activeTodos.length === 0 && completedTodos.length === 0 && (
               <div className="empty">还没有待办，输入一个吧 ↑</div>
             )}
             {activeTodos.map((todo) => (
               <div key={todo.id} className={`todo-item ${todo.timer_status === "running" ? "running" : ""}`}>
                 <div className="todo-main">
-                  <span className="todo-title">{todo.title}</span>
+                  <span className={`todo-title ${expandedIds.has(todo.id) ? "expanded" : ""}`}
+                    onClick={() => setExpandedIds(prev => {
+                      const next = new Set(prev);
+                      next.has(todo.id) ? next.delete(todo.id) : next.add(todo.id);
+                      return next;
+                    })}>{todo.title}</span>
                   <div className="todo-tags">
                     {todo.tags.map((t) => (
                       <span key={t.id} className="mini-tag" style={{ background: t.color }}>{t.name}</span>
@@ -1412,7 +1435,12 @@ export default function App() {
                   completedTodos.map((todo) => (
                     <div key={todo.id} className="todo-item completed">
                       <div className="todo-main">
-                        <span className="todo-title line-through">{todo.title}</span>
+                        <span className={`todo-title line-through ${expandedIds.has(todo.id) ? "expanded" : ""}`}
+                          onClick={() => setExpandedIds(prev => {
+                            const next = new Set(prev);
+                            next.has(todo.id) ? next.delete(todo.id) : next.add(todo.id);
+                            return next;
+                          })}>{todo.title}</span>
                         <div className="todo-tags">
                           {todo.tags.map((t) => (
                             <span key={t.id} className="mini-tag" style={{ background: t.color, opacity: 0.6 }}>{t.name}</span>
