@@ -1,0 +1,59 @@
+{
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devPath": "http://localhost:1421",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "悬浮待办",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "window": {
+        "all": true
+      },
+      "shell": {
+        "open": true
+      },
+      "dialog": {
+        "save": true,
+        "open": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.floating-todo.app",
+      "icon": [
+        "icons/icon.png",
+        "icons/icon.icns"
+      ]
+    },
+    "macOSPrivateApi": true,
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'"
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "悬浮待办",
+        "width": 36,
+        "height": 36,
+        "resizable": false,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "transparent": true,
+        "skipTaskbar": true,
+        "x": 100,
+        "y": 200
+      }
+    ],
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": false
+    }
+  }
+}
