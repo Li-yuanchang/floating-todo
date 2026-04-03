@@ -922,7 +922,7 @@ export default function App() {
         </div>
       )}
       {showRunningList && !inlineMode && (
-        <div className="add-panel" style={barStyle}>
+        <div className="add-panel" style={{ background: barStyle.background, backdropFilter: barStyle.backdropFilter, WebkitBackdropFilter: barStyle.WebkitBackdropFilter }}>
           {sortedRunning.map((t) => (
             <div
               key={t.id}
