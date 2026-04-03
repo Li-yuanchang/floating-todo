@@ -609,21 +609,20 @@ body {
 }
 
 .todo-title {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   font-size: 13px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   margin-bottom: 1px;
   word-break: break-all;
   cursor: default;
+  max-height: 2.8em;
+  line-height: 1.4;
+  overflow: hidden;
+  position: relative;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .todo-title:hover {
-  -webkit-line-clamp: unset;
-  overflow: visible;
-  white-space: normal;
+  max-height: 600px;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .line-through {
@@ -1248,17 +1247,16 @@ body {
 
 .cal-todo-title {
   font-size: 12px;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  text-overflow: ellipsis;
   word-break: break-all;
+  max-height: 2.6em;
+  line-height: 1.3;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .cal-todo-title:hover {
-  -webkit-line-clamp: unset;
-  overflow: visible;
+  max-height: 600px;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .cal-todo-meta {
