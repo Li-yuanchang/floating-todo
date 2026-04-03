@@ -634,6 +634,7 @@ body {
 }
 
 .todo-title {
+  display: block;
   font-size: 13px;
   margin-bottom: 1px;
   cursor: pointer;
@@ -1274,6 +1275,7 @@ body {
 }
 
 .cal-todo-title {
+  display: block;
   font-size: 12px;
   cursor: pointer;
   line-height: 1.3;
