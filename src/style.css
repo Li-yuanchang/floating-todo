@@ -617,7 +617,7 @@ body {
 
 .todo-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   padding: 7px 8px;
   border-radius: 8px;
@@ -625,6 +625,10 @@ body {
   background: var(--card);
   border: 1px solid transparent;
   transition: all 0.1s;
+}
+
+.todo-actions {
+  margin-top: 1px;
 }
 
 .todo-item:hover {
