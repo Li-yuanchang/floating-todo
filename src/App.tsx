@@ -102,7 +102,16 @@ export default function App() {
   const [inlineText, setInlineText] = useState("");
   const [completeIds, setCompleteIds] = useState<Set<number>>(new Set());
   const [showRunningList, setShowRunningList] = useState(false);
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const [expandedTitleIds, setExpandedTitleIds] = useState<Set<number>>(new Set());
+  const toggleTitleExpand = (id: number, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
+    setExpandedTitleIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
   const [toast, setToast] = useState<string | null>(null);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -1310,16 +1319,27 @@ export default function App() {
               {/* Day detail */}
               {calDayTodos && (
                 <div className="cal-day-detail">
-                  <div className="cal-day-header">{calSelectedDay} · {calDayTodos.length}条待办</div>
+                  <div className="cal-day-header">
+                    <span>{calSelectedDay} · {calDayTodos.length}条待办</span>
+                    <button className="expand-toggle-btn" onClick={() => {
+                      const allIds = calDayTodos.map(t => t.id);
+                      const allExpanded = allIds.every(id => expandedTitleIds.has(id));
+                      setExpandedTitleIds(prev => {
+                        const next = new Set(prev);
+                        if (allExpanded) { allIds.forEach(id => next.delete(id)); }
+                        else { allIds.forEach(id => next.add(id)); }
+                        return next;
+                      });
+                    }}>
+                      {calDayTodos.every(t => expandedTitleIds.has(t.id)) ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
+                      {calDayTodos.every(t => expandedTitleIds.has(t.id)) ? "收起" : "展开"}
+                    </button>
+                  </div>
                   {calDayTodos.map((t) => (
                     <div key={t.id} className="cal-todo-row">
                       <div className="cal-todo-info">
-                        <span className={`cal-todo-title ${expandedIds.has(t.id) ? "expanded" : ""}`}
-                          onClick={() => setExpandedIds(prev => {
-                            const next = new Set(prev);
-                            next.has(t.id) ? next.delete(t.id) : next.add(t.id);
-                            return next;
-                          })}>{t.title}</span>
+                        <span className={`cal-todo-title ${t.status === "archived" ? "line-through" : ""} ${expandedTitleIds.has(t.id) ? "expanded" : ""}`}
+                          onClick={(e) => toggleTitleExpand(t.id, e)}>{t.title}</span>
                         <span className="cal-todo-meta">
                           {t.timer_elapsed_sec > 0 && formatTime(t.timer_elapsed_sec)}
                           {t.status === "archived" && " · 已归档"}
@@ -1378,11 +1398,11 @@ export default function App() {
               <div className="list-toolbar">
                 <button className="expand-toggle-btn" onClick={() => {
                   const allIds = [...activeTodos, ...completedTodos].map(t => t.id);
-                  const allExpanded = allIds.every(id => expandedIds.has(id));
-                  setExpandedIds(allExpanded ? new Set() : new Set(allIds));
+                  const allExpanded = allIds.every(id => expandedTitleIds.has(id));
+                  setExpandedTitleIds(allExpanded ? new Set() : new Set(allIds));
                 }}>
-                  {[...activeTodos, ...completedTodos].every(t => expandedIds.has(t.id)) ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
-                  {[...activeTodos, ...completedTodos].every(t => expandedIds.has(t.id)) ? "全部收起" : "全部展开"}
+                  {[...activeTodos, ...completedTodos].every(t => expandedTitleIds.has(t.id)) ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
+                  {[...activeTodos, ...completedTodos].every(t => expandedTitleIds.has(t.id)) ? "全部收起" : "全部展开"}
                 </button>
               </div>
             )}
@@ -1392,12 +1412,8 @@ export default function App() {
             {activeTodos.map((todo) => (
               <div key={todo.id} className={`todo-item ${todo.timer_status === "running" ? "running" : ""}`}>
                 <div className="todo-main">
-                  <span className={`todo-title ${expandedIds.has(todo.id) ? "expanded" : ""}`}
-                    onClick={() => setExpandedIds(prev => {
-                      const next = new Set(prev);
-                      next.has(todo.id) ? next.delete(todo.id) : next.add(todo.id);
-                      return next;
-                    })}>{todo.title}</span>
+                  <span className={`todo-title ${expandedTitleIds.has(todo.id) ? "expanded" : ""}`}
+                    onClick={(e) => toggleTitleExpand(todo.id, e)}>{todo.title}</span>
                   <div className="todo-tags">
                     {todo.tags.map((t) => (
                       <span key={t.id} className="mini-tag" style={{ background: t.color }}>{t.name}</span>
@@ -1435,12 +1451,8 @@ export default function App() {
                   completedTodos.map((todo) => (
                     <div key={todo.id} className="todo-item completed">
                       <div className="todo-main">
-                        <span className={`todo-title line-through ${expandedIds.has(todo.id) ? "expanded" : ""}`}
-                          onClick={() => setExpandedIds(prev => {
-                            const next = new Set(prev);
-                            next.has(todo.id) ? next.delete(todo.id) : next.add(todo.id);
-                            return next;
-                          })}>{todo.title}</span>
+                        <span className={`todo-title line-through ${expandedTitleIds.has(todo.id) ? "expanded" : ""}`}
+                          onClick={(e) => toggleTitleExpand(todo.id, e)}>{todo.title}</span>
                         <div className="todo-tags">
                           {todo.tags.map((t) => (
                             <span key={t.id} className="mini-tag" style={{ background: t.color, opacity: 0.6 }}>{t.name}</span>
