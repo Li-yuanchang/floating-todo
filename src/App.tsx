@@ -153,6 +153,19 @@ export default function App() {
   const expandToListRef = useRef<() => void>(() => {});
   const [, setTick] = useState(0);
 
+  // Click-outside to save/cancel inline edit (onBlur doesn't work with data-tauri-drag-region)
+  useEffect(() => {
+    if (!inlineMode) return;
+    const handler = (e: MouseEvent) => {
+      if (inlineRef.current && !inlineRef.current.contains(e.target as Node)) {
+        if (inlineMode === "rename") handleInlineRename();
+        else cancelInline();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [inlineMode, inlineText]);
+
   // Get today's start timestamp (local midnight in seconds)
   const getTodayStart = () => {
     const d = new Date();
