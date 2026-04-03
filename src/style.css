@@ -242,12 +242,18 @@ body {
 
 .add-panel-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 6px 10px;
   cursor: pointer;
   font-size: 12px;
   transition: background 0.1s;
+}
+
+.add-panel-row .add-panel-time,
+.add-panel-row .bar-btn,
+.add-panel-row .expand-icon-btn {
+  margin-top: 1px;
 }
 
 .add-panel-row:hover {
