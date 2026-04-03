@@ -842,8 +842,8 @@ export default function App() {
                   onBlur={() => {
                     if (inlineMode === "add") {
                       setTimeout(() => cancelInline(), 150);
-                    } else {
-                      cancelInline();
+                    } else if (inlineMode === "rename") {
+                      handleInlineRename();
                     }
                   }}
                 />
