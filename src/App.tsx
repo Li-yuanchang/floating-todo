@@ -1447,12 +1447,13 @@ export default function App() {
             </div>
             <div className="edit-body">
               <label className="edit-label">标题</label>
-              <input
-                className="edit-input"
+              <textarea
+                className="edit-input edit-textarea"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); }}
+                onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) saveEdit(); }}
                 autoFocus
+                rows={3}
               />
               <label className="edit-label">标签</label>
               <div className="edit-tags">

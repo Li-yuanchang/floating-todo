@@ -609,12 +609,21 @@ body {
 }
 
 .todo-title {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: 13px;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 1px;
+  word-break: break-all;
+  cursor: default;
+}
+
+.todo-title:hover {
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  white-space: normal;
 }
 
 .line-through {
@@ -1239,10 +1248,17 @@ body {
 
 .cal-todo-title {
   font-size: 12px;
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-all;
+}
+
+.cal-todo-title:hover {
+  -webkit-line-clamp: unset;
+  overflow: visible;
 }
 
 .cal-todo-meta {
@@ -1357,6 +1373,14 @@ body {
 
 .edit-input:focus {
   border-color: var(--accent);
+}
+
+.edit-textarea {
+  resize: vertical;
+  min-height: 48px;
+  max-height: 120px;
+  font-family: inherit;
+  line-height: 1.5;
 }
 
 .edit-tags {
