@@ -730,6 +730,8 @@ body {
 .act-btn.play:hover { background: var(--accent-bg); }
 .act-btn.reopen { color: #007AFF; }
 .act-btn.reopen:hover { background: rgba(0, 122, 255, 0.1); }
+.act-btn.danger { color: #FF3B30; opacity: 0.5; }
+.act-btn.danger:hover { background: rgba(255, 59, 48, 0.1); opacity: 1; }
 .act-btn.archive { color: var(--text-dim); }
 
 /* ── Section toggle ── */

@@ -1457,6 +1457,9 @@ export default function App() {
                   <button className="act-btn edit" onClick={() => openEdit(todo)} title="编辑">
                     <Pencil size={12} />
                   </button>
+                  <button className="act-btn danger" onClick={async () => { await invoke("delete_todo", { id: todo.id }); await loadData(); }} title="删除">
+                    <Trash2 size={12} />
+                  </button>
                   {todo.timer_status === "running" ? (
                     <button className="act-btn pause" onClick={() => handlePause(todo.id)} title="暂停">
                       <Pause size={13} />
