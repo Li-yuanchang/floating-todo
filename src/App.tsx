@@ -530,6 +530,14 @@ export default function App() {
     }
   };
 
+  const cancelEdit = async () => {
+    if (editingTodo && editWasRunning.current) {
+      try { await invoke("start_timer", { id: editingTodo.id }); } catch (_) {}
+    }
+    setEditingTodo(null);
+    await loadData();
+  };
+
   const deleteFromEdit = async () => {
     if (!editingTodo) return;
     try {
@@ -1431,11 +1439,11 @@ export default function App() {
         </div>
       )}
       {editingTodo && (
-        <div className="edit-overlay" onClick={() => setEditingTodo(null)}>
+        <div className="edit-overlay" onClick={cancelEdit}>
           <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
             <div className="edit-header">
               <span className="edit-header-title">编辑待办</span>
-              <button className="edit-close" onClick={() => setEditingTodo(null)}><X size={14} /></button>
+              <button className="edit-close" onClick={cancelEdit}><X size={14} /></button>
             </div>
             <div className="edit-body">
               <label className="edit-label">标题</label>
@@ -1477,7 +1485,7 @@ export default function App() {
                 <Trash2 size={12} /> 删除
               </button>
               <div style={{ flex: 1 }} />
-              <button className="edit-btn cancel" onClick={() => setEditingTodo(null)}>取消</button>
+              <button className="edit-btn cancel" onClick={cancelEdit}>取消</button>
               <button className="edit-btn save" onClick={saveEdit}>保存</button>
             </div>
           </div>
