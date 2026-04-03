@@ -150,6 +150,14 @@ export default function App() {
     setBarOpacity(v);
     localStorage.setItem("bar-opacity", String(v));
   };
+  const [marqueeSpeed, setMarqueeSpeed] = useState(() => {
+    const saved = localStorage.getItem("marquee-speed");
+    return saved ? Number(saved) : 25;
+  });
+  const updateMarqueeSpeed = (v: number) => {
+    setMarqueeSpeed(v);
+    localStorage.setItem("marquee-speed", String(v));
+  };
 
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     return (localStorage.getItem("theme") as ThemeMode) || "system";
@@ -868,7 +876,8 @@ export default function App() {
               ) : (
                 <div className="marquee-wrapper" data-tauri-drag-region ref={textMeasureRef} onClick={startRename} title="点击编辑任务名（Enter保存）">
                   {needsMarquee ? (
-                    <span className="marquee-text" data-tauri-drag-region key={displayTodo.id}>{displayTodo.title}</span>
+                    <span className="marquee-text" data-tauri-drag-region key={displayTodo.id}
+                      style={{ animationDuration: marqueeSpeed > 0 ? `${marqueeSpeed}s` : '0s', animationPlayState: marqueeSpeed > 0 ? 'running' : 'paused' }}>{displayTodo.title}</span>
                   ) : (
                     <span className="static-text" data-tauri-drag-region key={displayTodo.id}>{displayTodo.title}</span>
                   )}
@@ -1050,6 +1059,28 @@ export default function App() {
                   step="1"
                   value={barH}
                   onChange={(e) => updateBarH(Number(e.target.value))}
+                  className="opacity-slider"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="settings-section">
+            <div className="settings-label">滚动速度</div>
+            <div className="settings-group">
+              <div className="settings-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                  <span>停止</span>
+                  <span style={{ fontFamily: "'SF Mono', Menlo, monospace", color: "var(--accent)" }}>{marqueeSpeed === 0 ? "不滚动" : `${marqueeSpeed}s`}</span>
+                  <span>慢速</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={60}
+                  step="1"
+                  value={marqueeSpeed}
+                  onChange={(e) => updateMarqueeSpeed(Number(e.target.value))}
                   className="opacity-slider"
                 />
               </div>
