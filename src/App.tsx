@@ -1441,12 +1441,20 @@ export default function App() {
             {(activeTodos.length + completedTodos.length) > 0 && (
               <div className="list-toolbar">
                 <button className="expand-toggle-btn" onClick={() => {
-                  const allIds = [...activeTodos, ...completedTodos].map(t => t.id);
-                  const allExpanded = allIds.every(id => expandedTitleIds.has(id));
-                  setExpandedTitleIds(allExpanded ? new Set() : new Set(allIds));
+                  const visibleTodos = [...activeTodos, ...(showCompleted ? completedTodos : [])];
+                  const allIds = visibleTodos.map(t => t.id);
+                  const allExpanded = allIds.length > 0 && allIds.every(id => expandedTitleIds.has(id));
+                  if (allExpanded) {
+                    setExpandedTitleIds(prev => { const next = new Set(prev); allIds.forEach(id => next.delete(id)); return next; });
+                  } else {
+                    setExpandedTitleIds(prev => { const next = new Set(prev); allIds.forEach(id => next.add(id)); return next; });
+                  }
                 }}>
-                  {[...activeTodos, ...completedTodos].every(t => expandedTitleIds.has(t.id)) ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
-                  {[...activeTodos, ...completedTodos].every(t => expandedTitleIds.has(t.id)) ? "全部收起" : "全部展开"}
+                  {(() => {
+                    const vis = [...activeTodos, ...(showCompleted ? completedTodos : [])];
+                    const allExp = vis.length > 0 && vis.every(t => expandedTitleIds.has(t.id));
+                    return <>{allExp ? <ChevronRight size={11} /> : <ChevronDown size={11} />}{allExp ? "全部收起" : "全部展开"}</>;
+                  })()}
                 </button>
               </div>
             )}
