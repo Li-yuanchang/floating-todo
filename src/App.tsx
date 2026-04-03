@@ -491,8 +491,11 @@ export default function App() {
     }
   };
 
+  const editWasRunning = useRef(false);
+
   const openEdit = async (todo: Todo) => {
-    if (todo.timer_status === "running") {
+    editWasRunning.current = todo.timer_status === "running";
+    if (editWasRunning.current) {
       try { await invoke("pause_timer", { id: todo.id }); await loadData(); } catch (_) {}
       todo = { ...todo, timer_status: "paused", timer_started_at: null,
         timer_elapsed_sec: todo.timer_started_at
@@ -513,8 +516,13 @@ export default function App() {
     const title = editTitle.trim();
     if (!title) return;
     const elapsedSec = editH * 3600 + editM * 60 + editS;
+    const todoId = editingTodo.id;
+    const shouldResume = editWasRunning.current;
     try {
-      await invoke("update_todo", { id: editingTodo.id, title, tagIds: editTagIds, elapsedSec });
+      await invoke("update_todo", { id: todoId, title, tagIds: editTagIds, elapsedSec });
+      if (shouldResume) {
+        await invoke("start_timer", { id: todoId });
+      }
       setEditingTodo(null);
       await loadData();
     } catch (e) {
@@ -601,11 +609,22 @@ export default function App() {
   const handleExport = async () => {
     try {
       const path = await save({
-        defaultPath: "todos.json",
-        filters: [{ name: "JSON", extensions: ["json"] }],
+        defaultPath: "todos.csv",
+        filters: [
+          { name: "CSV (Excel可打开)", extensions: ["csv"] },
+          { name: "Markdown (清单)", extensions: ["md"] },
+          { name: "JSON (完整备份)", extensions: ["json"] },
+        ],
       });
       if (path) {
-        await invoke("export_todos", { path });
+        const ext = path.split(".").pop()?.toLowerCase();
+        if (ext === "csv") {
+          await invoke("export_csv", { path });
+        } else if (ext === "md" || ext === "txt") {
+          await invoke("export_markdown", { path });
+        } else {
+          await invoke("export_todos", { path });
+        }
         showToast("✓ 导出成功");
       }
     } catch (e) {

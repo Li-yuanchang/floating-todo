@@ -464,6 +464,99 @@ impl Database {
         Ok(())
     }
 
+    pub fn export_csv(&self, path: &Path) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, title, status, timer_elapsed_sec, timer_status, timer_started_at, created_at, completed_at FROM todos ORDER BY created_at DESC"
+        )?;
+        let rows: Vec<(i64, String, String, i64, String, Option<i64>, i64, Option<i64>)> = stmt.query_map([], |r| {
+            Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?, r.get(7)?))
+        })?.collect::<Result<Vec<_>>>()?;
+
+        let mut out = String::from("title,status,tags,elapsed,created_at,completed_at\n");
+        for (id, title, status, elapsed, timer_status, started_at, created_at, completed_at) in &rows {
+            let tags = self.get_tags_for_todo(&conn, *id)?;
+            let tag_names: Vec<String> = tags.iter().map(|t| t.name.clone()).collect();
+            let total_sec = if timer_status == "running" {
+                elapsed + started_at.map(|s| now() - s).unwrap_or(0)
+            } else { *elapsed };
+            let h = total_sec / 3600;
+            let m = (total_sec % 3600) / 60;
+            let s = total_sec % 60;
+            let csv_title = if title.contains(',') || title.contains('"') {
+                format!("\"{}\"", title.replace('"', "\"\""))
+            } else { title.clone() };
+            out.push_str(&format!("{},{},{},{}:{:02}:{:02},{},{}\n",
+                csv_title, status, tag_names.join(";"),
+                h, m, s,
+                Self::ts_to_date(*created_at),
+                completed_at.map(|t| Self::ts_to_date(t)).unwrap_or_default(),
+            ));
+        }
+        std::fs::write(path, out).map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
+        Ok(())
+    }
+
+    pub fn export_markdown(&self, path: &Path) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, title, status, timer_elapsed_sec, timer_status, timer_started_at, created_at FROM todos ORDER BY created_at DESC"
+        )?;
+        let rows: Vec<(i64, String, String, i64, String, Option<i64>, i64)> = stmt.query_map([], |r| {
+            Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?))
+        })?.collect::<Result<Vec<_>>>()?;
+
+        let mut out = String::from("# 待办导出\n\n");
+        let mut current_date = String::new();
+        for (id, title, status, elapsed, timer_status, started_at, created_at) in &rows {
+            let date = Self::ts_to_date(*created_at);
+            if date != current_date {
+                if !current_date.is_empty() { out.push('\n'); }
+                out.push_str(&format!("## {}\n\n", date));
+                current_date = date;
+            }
+            let check = if status == "completed" || status == "archived" { "x" } else { " " };
+            let tags = self.get_tags_for_todo(&conn, *id)?;
+            let tag_str = if tags.is_empty() { String::new() } else {
+                format!(" [{}]", tags.iter().map(|t| t.name.as_str()).collect::<Vec<_>>().join(", "))
+            };
+            let total_sec = if timer_status == "running" {
+                elapsed + started_at.map(|s| now() - s).unwrap_or(0)
+            } else { *elapsed };
+            let time_str = if total_sec > 0 {
+                format!(" ({}:{:02}:{:02})", total_sec / 3600, (total_sec % 3600) / 60, total_sec % 60)
+            } else { String::new() };
+            out.push_str(&format!("- [{}] {}{}{}\n", check, title, tag_str, time_str));
+        }
+        std::fs::write(path, out).map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
+        Ok(())
+    }
+
+    fn ts_to_date(ts: i64) -> String {
+        let secs_per_day = 86400i64;
+        let tz = 8 * 3600i64; // CST
+        let local_ts = ts + tz;
+        let days = local_ts / secs_per_day;
+        // Approximate date calculation
+        let mut y = 1970i64;
+        let mut rem = days;
+        loop {
+            let dy = if (y % 4 == 0 && y % 100 != 0) || y % 400 == 0 { 366 } else { 365 };
+            if rem < dy { break; }
+            rem -= dy;
+            y += 1;
+        }
+        let leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+        let mdays = [31, if leap {29} else {28}, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        let mut m = 0usize;
+        for md in &mdays {
+            if rem < *md as i64 { break; }
+            rem -= *md as i64;
+            m += 1;
+        }
+        format!("{}-{:02}-{:02}", y, m + 1, rem + 1)
+    }
+
     pub fn import_todos(&self, path: &Path) -> Result<ImportResult> {
         let json = std::fs::read_to_string(path).map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
         let data: ExportData = serde_json::from_str(&json).map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;

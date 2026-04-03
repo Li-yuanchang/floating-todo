@@ -146,6 +146,16 @@ fn export_todos(state: tauri::State<AppState>, path: String) -> Result<(), Strin
 }
 
 #[tauri::command]
+fn export_csv(state: tauri::State<AppState>, path: String) -> Result<(), String> {
+    state.db.export_csv(std::path::Path::new(&path)).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn export_markdown(state: tauri::State<AppState>, path: String) -> Result<(), String> {
+    state.db.export_markdown(std::path::Path::new(&path)).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn import_todos(state: tauri::State<AppState>, path: String) -> Result<ImportResult, String> {
     state.db.import_todos(std::path::Path::new(&path)).map_err(|e| e.to_string())
 }
@@ -304,6 +314,8 @@ fn main() {
             update_todo_time,
             get_tag_stats,
             export_todos,
+            export_csv,
+            export_markdown,
             import_todos,
             get_autostart,
             set_autostart,
