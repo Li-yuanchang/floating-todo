@@ -131,8 +131,8 @@ fn get_todos_by_date(state: tauri::State<AppState>, start_ts: i64, end_ts: i64) 
 }
 
 #[tauri::command]
-fn get_todo_dates(state: tauri::State<AppState>, start_ts: i64, end_ts: i64) -> Result<Vec<(i64, i64)>, String> {
-    state.db.get_todo_dates(start_ts, end_ts).map_err(|e| e.to_string())
+fn get_todo_dates(state: tauri::State<AppState>, start_ts: i64, end_ts: i64, tz_offset_sec: Option<i64>) -> Result<Vec<(i64, i64)>, String> {
+    state.db.get_todo_dates(start_ts, end_ts, tz_offset_sec).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -146,7 +146,7 @@ fn export_todos(state: tauri::State<AppState>, path: String) -> Result<(), Strin
 }
 
 #[tauri::command]
-fn import_todos(state: tauri::State<AppState>, path: String) -> Result<(), String> {
+fn import_todos(state: tauri::State<AppState>, path: String) -> Result<ImportResult, String> {
     state.db.import_todos(std::path::Path::new(&path)).map_err(|e| e.to_string())
 }
 

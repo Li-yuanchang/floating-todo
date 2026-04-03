@@ -5,7 +5,7 @@ import { save, open } from "@tauri-apps/api/dialog";
 import {
   ClipboardCheck, X, Pause, Play, Check, RotateCcw, Archive,
   Download, Upload, BarChart3, ListTodo, ChevronDown, ChevronRight,
-  Settings, Monitor, Sun, Moon, Plus, Calendar, Search, ChevronLeft, Pencil,
+  Settings, Monitor, Sun, Moon, Plus, Calendar, Search, ChevronLeft, Pencil, Trash2,
 } from "lucide-react";
 
 // ── Types ──
@@ -68,8 +68,6 @@ function formatTime(seconds: number): string {
 }
 
 // ── Window sizes ──
-const COLLAPSED_ICON_W = 42;
-const COLLAPSED_ICON_H = 42;
 const DEFAULT_BAR_W = 300;
 const MIN_BAR_W_FIXED = 42;
 const MAX_BAR_W = 500;
@@ -111,6 +109,9 @@ export default function App() {
   const [editH, setEditH] = useState(0);
   const [editM, setEditM] = useState(0);
   const [editS, setEditS] = useState(0);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState("#4CAF50");
   const [autostart, setAutostart] = useState(false);
   const [midnightComplete, setMidnightComplete] = useState(() => {
     return localStorage.getItem("midnight-complete") === "true";
@@ -490,7 +491,14 @@ export default function App() {
     }
   };
 
-  const openEdit = (todo: Todo) => {
+  const openEdit = async (todo: Todo) => {
+    if (todo.timer_status === "running") {
+      try { await invoke("pause_timer", { id: todo.id }); await loadData(); } catch (_) {}
+      todo = { ...todo, timer_status: "paused", timer_started_at: null,
+        timer_elapsed_sec: todo.timer_started_at
+          ? todo.timer_elapsed_sec + Math.floor(Date.now() / 1000) - todo.timer_started_at
+          : todo.timer_elapsed_sec };
+    }
     setEditingTodo(todo);
     setEditTitle(todo.title);
     setEditTagIds(todo.tags.map((t) => t.id));
@@ -512,6 +520,44 @@ export default function App() {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const deleteFromEdit = async () => {
+    if (!editingTodo) return;
+    try {
+      await invoke("delete_todo", { id: editingTodo.id });
+      setEditingTodo(null);
+      await loadData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAddTag = async () => {
+    const name = newTagName.trim();
+    if (!name) return;
+    try {
+      await invoke("create_tag", { name, color: newTagColor, icon: null });
+      setNewTagName("");
+      setNewTagColor("#4CAF50");
+      await loadData();
+    } catch (e) { console.error(e); }
+  };
+
+  const handleSaveTag = async () => {
+    if (!editingTag) return;
+    try {
+      await invoke("update_tag", { id: editingTag.id, name: editingTag.name, color: editingTag.color, icon: editingTag.icon });
+      setEditingTag(null);
+      await loadData();
+    } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteTag = async (id: number) => {
+    try {
+      await invoke("delete_tag", { id });
+      await loadData();
+    } catch (e) { console.error(e); }
   };
 
   const toggleCompleteId = (id: number) => {
@@ -560,9 +606,11 @@ export default function App() {
       });
       if (path) {
         await invoke("export_todos", { path });
+        showToast("✓ 导出成功");
       }
     } catch (e) {
       console.error(e);
+      showToast("✗ 导出失败: " + String(e));
     }
   };
 
@@ -586,11 +634,7 @@ export default function App() {
         showToast("正在导入...");
         const result = await invoke<{ imported: number; skipped: number }>("import_file", { path });
         await loadData();
-        if (result.imported < 0) {
-          showToast("✓ 导入成功");
-        } else {
-          showToast(`✓ 导入 ${result.imported} 条，跳过 ${result.skipped} 条重复`);
-        }
+        showToast(`✓ 导入 ${result.imported} 条，跳过 ${result.skipped} 条重复`);
       }
     } catch (e) {
       console.error(e);
@@ -645,7 +689,8 @@ export default function App() {
     const startTs = Math.floor(startD.getTime() / 1000);
     const endTs = Math.floor(endD.getTime() / 1000);
     try {
-      const dates = await invoke<[number, number][]>("get_todo_dates", { startTs, endTs });
+      const tzOffsetSec = -new Date().getTimezoneOffset() * 60;
+      const dates = await invoke<[number, number][]>("get_todo_dates", { startTs, endTs, tzOffsetSec });
       const map = new Map<string, number>();
       for (const [ts, count] of dates) {
         const d = new Date(ts * 1000);
@@ -1002,6 +1047,42 @@ export default function App() {
                 <div className={`toggle ${midnightComplete ? "on" : ""}`}>
                   <div className="toggle-knob" />
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="settings-section">
+            <div className="settings-label">标签管理</div>
+            <div className="settings-group">
+              {tags.map((tag) => (
+                <div key={tag.id} className="settings-row tag-manage-row">
+                  {editingTag?.id === tag.id ? (
+                    <>
+                      <input type="color" className="tag-color-picker" value={editingTag.color}
+                        onChange={(e) => setEditingTag({ ...editingTag, color: e.target.value })} />
+                      <input className="tag-name-input" value={editingTag.name}
+                        onChange={(e) => setEditingTag({ ...editingTag, name: e.target.value })}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleSaveTag(); if (e.key === "Escape") setEditingTag(null); }} autoFocus />
+                      <button className="tag-action-btn save" onClick={handleSaveTag} title="保存"><Check size={12} /></button>
+                      <button className="tag-action-btn cancel" onClick={() => setEditingTag(null)} title="取消"><X size={12} /></button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="tag-dot" style={{ background: tag.color }} />
+                      <span className="tag-manage-name">{tag.name}</span>
+                      <button className="tag-action-btn" onClick={() => setEditingTag({ ...tag })} title="编辑"><Pencil size={11} /></button>
+                      <button className="tag-action-btn danger" onClick={() => handleDeleteTag(tag.id)} title="删除"><Trash2 size={11} /></button>
+                    </>
+                  )}
+                </div>
+              ))}
+              <div className="settings-row tag-manage-row">
+                <input type="color" className="tag-color-picker" value={newTagColor}
+                  onChange={(e) => setNewTagColor(e.target.value)} />
+                <input className="tag-name-input" placeholder="新标签名..." value={newTagName}
+                  onChange={(e) => setNewTagName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleAddTag(); }} />
+                <button className="tag-action-btn save" onClick={handleAddTag} title="添加"><Plus size={12} /></button>
               </div>
             </div>
           </div>
@@ -1373,6 +1454,10 @@ export default function App() {
               </div>
             </div>
             <div className="edit-footer">
+              <button className="edit-btn danger" onClick={deleteFromEdit} title="彻底删除此待办">
+                <Trash2 size={12} /> 删除
+              </button>
+              <div style={{ flex: 1 }} />
               <button className="edit-btn cancel" onClick={() => setEditingTodo(null)}>取消</button>
               <button className="edit-btn save" onClick={saveEdit}>保存</button>
             </div>

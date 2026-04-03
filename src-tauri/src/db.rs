@@ -240,26 +240,6 @@ impl Database {
         })
     }
 
-    fn auto_complete_running(&self, conn: &Connection, ts: i64) -> Result<()> {
-        // Find all running todos and complete them
-        let mut stmt = conn.prepare(
-            "SELECT id, timer_started_at, timer_elapsed_sec FROM todos WHERE status = 'in_progress' AND timer_status = 'running'"
-        )?;
-        let running: Vec<(i64, Option<i64>, i64)> = stmt.query_map([], |row| {
-            Ok((row.get(0)?, row.get(1)?, row.get(2)?))
-        })?.collect::<Result<Vec<_>>>()?;
-
-        for (id, started_at, elapsed) in running {
-            let extra = started_at.map(|s| ts - s).unwrap_or(0);
-            let total = elapsed + extra;
-            conn.execute(
-                "UPDATE todos SET status = 'completed', timer_status = 'stopped', timer_started_at = NULL, timer_elapsed_sec = ?, completed_at = ? WHERE id = ?",
-                params![total, ts, id],
-            )?;
-        }
-        Ok(())
-    }
-
     pub fn complete_todo(&self, id: i64) -> Result<()> {
         let conn = self.conn.lock().unwrap();
         let ts = now();
@@ -404,15 +384,15 @@ impl Database {
         Ok(todos)
     }
 
-    pub fn get_todo_dates(&self, start_ts: i64, end_ts: i64) -> Result<Vec<(i64, i64)>> {
+    pub fn get_todo_dates(&self, start_ts: i64, end_ts: i64, tz_offset_sec: Option<i64>) -> Result<Vec<(i64, i64)>> {
         let conn = self.conn.lock().unwrap();
-        // Group by day: divide created_at by 86400, return (day_start_ts, count)
+        let tz = tz_offset_sec.unwrap_or(8 * 3600); // default CST +8
         let mut stmt = conn.prepare(
-            "SELECT (created_at / 86400) * 86400 as day_ts, COUNT(*) as cnt
-             FROM todos WHERE created_at >= ? AND created_at < ?
+            "SELECT ((created_at + ?1) / 86400) * 86400 - ?1 as day_ts, COUNT(*) as cnt
+             FROM todos WHERE created_at >= ?2 AND created_at < ?3
              GROUP BY day_ts ORDER BY day_ts"
         )?;
-        let rows = stmt.query_map(params![start_ts, end_ts], |row| {
+        let rows = stmt.query_map(params![tz, start_ts, end_ts], |row| {
             Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?))
         })?;
         rows.collect::<Result<Vec<_>>>()
@@ -484,11 +464,13 @@ impl Database {
         Ok(())
     }
 
-    pub fn import_todos(&self, path: &Path) -> Result<()> {
+    pub fn import_todos(&self, path: &Path) -> Result<ImportResult> {
         let json = std::fs::read_to_string(path).map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
         let data: ExportData = serde_json::from_str(&json).map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
 
         let conn = self.conn.lock().unwrap();
+        let mut imported = 0i64;
+        let mut skipped = 0i64;
 
         // Import tags (merge by name)
         for etag in &data.tags {
@@ -510,7 +492,7 @@ impl Database {
                 "SELECT COUNT(*) > 0 FROM todos WHERE title = ? AND created_at = ?",
                 params![etodo.title, etodo.created_at], |r| r.get(0)
             )?;
-            if dup { continue; }
+            if dup { skipped += 1; continue; }
             conn.execute(
                 "INSERT INTO todos (title, description, status, timer_status, timer_started_at, timer_elapsed_sec, created_at, completed_at, archived_at) VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?)",
                 params![etodo.title, etodo.description, etodo.status, "stopped", etodo.timer_elapsed_sec, etodo.created_at, etodo.completed_at, etodo.archived_at],
@@ -524,8 +506,9 @@ impl Database {
                     conn.execute("INSERT OR IGNORE INTO todo_tags (todo_id, tag_id) VALUES (?, ?)", params![todo_id, tid])?;
                 }
             }
+            imported += 1;
         }
-        Ok(())
+        Ok(ImportResult { imported, skipped })
     }
 
     // ── TXT import ──
@@ -755,10 +738,7 @@ impl Database {
             .map(|e| e.to_lowercase())
             .unwrap_or_default();
         match ext.as_str() {
-            "json" => {
-                self.import_todos(path)?;
-                Ok(ImportResult { imported: -1, skipped: 0 }) // -1 = legacy, no count
-            }
+            "json" => self.import_todos(path),
             "txt" | "md" => self.import_txt(path),
             "csv" => self.import_csv(path),
             _ => Err(rusqlite::Error::ToSqlConversionFailure(

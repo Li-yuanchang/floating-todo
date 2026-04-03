@@ -1,5 +1,41 @@
 # 浮动待办 - 变更日志
 
+## 2026-04-03 (第二轮优化)
+
+### 新功能
+
+#### 5. 标签管理 UI
+- **文件**: `src/App.tsx`, `src/style.css`
+- **改动**: 设置页新增"标签管理"区块，支持：
+  - 查看所有标签（色点 + 名称）
+  - 点击编辑：颜色选择器 + 名称输入，Enter 保存 / Esc 取消
+  - 删除标签（红色按钮确认）
+  - 底部新增标签（颜色选择器 + 名称 + Plus 按钮）
+
+#### 6. 编辑弹窗增加删除按钮
+- **文件**: `src/App.tsx`, `src/style.css`
+- **改动**: 编辑弹窗 footer 左侧增加红色"删除"按钮，调用 `delete_todo` 彻底删除待办
+
+#### 7. 编辑运行中待办时自动暂停计时器
+- **文件**: `src/App.tsx`
+- **改动**: `openEdit` 函数检测 `timer_status === "running"` 时先调用 `pause_timer` 暂停，再计算准确耗时填入编辑表单
+- **原因**: 如果不暂停，编辑耗时会与正在运行的计时器冲突
+
+### Bug 修复
+
+#### 5. 日历视图跨时区分组不准
+- **文件**: `src-tauri/src/db.rs`, `src-tauri/src/main.rs`, `src/App.tsx`
+- **问题**: `get_todo_dates` 用 `created_at / 86400` 按 UTC 天分组，不考虑本地时区
+- **修复**: 新增 `tz_offset_sec` 参数，SQL 改为 `(created_at + tz) / 86400 * 86400 - tz`，前端传入 `-getTimezoneOffset() * 60`
+
+### 优化
+
+- **导出成功 toast**: `handleExport` 成功后显示"✓ 导出成功"，失败显示错误信息
+- **JSON 导入计数**: `import_todos` 改为返回 `ImportResult { imported, skipped }`，前端统一显示导入/跳过数
+- **清理 dead code**: 删除未使用常量 `COLLAPSED_ICON_W`/`COLLAPSED_ICON_H`，删除 `auto_complete_running` 函数
+
+---
+
 ## 2026-04-03
 
 ### 新功能
