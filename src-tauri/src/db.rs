@@ -342,7 +342,7 @@ impl Database {
                     COUNT(DISTINCT td.id) as todo_count
              FROM tags t
              LEFT JOIN todo_tags tt ON t.id = tt.tag_id
-             LEFT JOIN todos td ON tt.todo_id = td.id AND td.created_at >= ? AND td.created_at < ?
+             LEFT JOIN todos td ON tt.todo_id = td.id AND td.created_at >= ? AND td.created_at < ? AND td.status != 'archived'
              GROUP BY t.id
              HAVING total_sec > 0
              ORDER BY total_sec DESC"
@@ -373,7 +373,7 @@ impl Database {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn.prepare(
             "SELECT id, title, description, status, timer_status, timer_started_at, timer_elapsed_sec, created_at, completed_at, archived_at
-             FROM todos WHERE created_at >= ? AND created_at < ?
+             FROM todos WHERE created_at >= ? AND created_at < ? AND status != 'archived'
              ORDER BY created_at DESC"
         )?;
         let rows = stmt.query_map(params![start_ts, end_ts], Self::row_to_todo)?;
@@ -389,7 +389,7 @@ impl Database {
         let tz = tz_offset_sec.unwrap_or(8 * 3600); // default CST +8
         let mut stmt = conn.prepare(
             "SELECT ((created_at + ?1) / 86400) * 86400 - ?1 as day_ts, COUNT(*) as cnt
-             FROM todos WHERE created_at >= ?2 AND created_at < ?3
+             FROM todos WHERE created_at >= ?2 AND created_at < ?3 AND status != 'archived'
              GROUP BY day_ts ORDER BY day_ts"
         )?;
         let rows = stmt.query_map(params![tz, start_ts, end_ts], |row| {
