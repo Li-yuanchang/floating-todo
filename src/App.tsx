@@ -877,7 +877,7 @@ export default function App() {
                 <div className="marquee-wrapper" data-tauri-drag-region ref={textMeasureRef} onClick={startRename} title="点击编辑任务名（Enter保存）">
                   {needsMarquee ? (
                     <span className="marquee-text" data-tauri-drag-region key={displayTodo.id}
-                      style={{ animationDuration: marqueeSpeed > 0 ? `${marqueeSpeed}s` : '0s', animationPlayState: marqueeSpeed > 0 ? 'running' : 'paused' }}>{displayTodo.title}</span>
+                      style={{ '--marquee-duration': marqueeSpeed > 0 ? `${marqueeSpeed}s` : '0s', animationPlayState: marqueeSpeed > 0 ? 'running' : 'paused' } as React.CSSProperties}>{displayTodo.title}</span>
                   ) : (
                     <span className="static-text" data-tauri-drag-region key={displayTodo.id}>{displayTodo.title}</span>
                   )}
@@ -933,7 +933,8 @@ export default function App() {
                 appWindow.setSize(new LogicalSize(collapsedBarW, barH)).catch(() => {});
               }}
             >
-              <span className="add-panel-title">{t.title}</span>
+              <span className={`add-panel-title ${expandedTitleIds.has(t.id) ? "expanded" : ""}`}
+                onClick={(e) => { e.stopPropagation(); toggleTitleExpand(t.id, e); }}>{t.title}</span>
               <span className="add-panel-time">{formatTime(getElapsed(t))}</span>
               <button
                 className="bar-btn bar-complete"
