@@ -342,7 +342,7 @@ impl Database {
                     COUNT(DISTINCT td.id) as todo_count
              FROM tags t
              LEFT JOIN todo_tags tt ON t.id = tt.tag_id
-             LEFT JOIN todos td ON tt.todo_id = td.id AND td.created_at >= ? AND td.created_at < ? AND td.status != 'archived'
+             LEFT JOIN todos td ON tt.todo_id = td.id AND td.created_at >= ? AND td.created_at < ?
              GROUP BY t.id
              HAVING total_sec > 0
              ORDER BY total_sec DESC"
