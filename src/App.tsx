@@ -933,6 +933,9 @@ export default function App() {
                 appWindow.setSize(new LogicalSize(collapsedBarW, barH)).catch(() => {});
               }}
             >
+              <button className="expand-icon-btn" onClick={(e) => { e.stopPropagation(); toggleTitleExpand(t.id, e); }} title={expandedTitleIds.has(t.id) ? "收起" : "展开"}>
+                {expandedTitleIds.has(t.id) ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+              </button>
               <span className={`add-panel-title ${expandedTitleIds.has(t.id) ? "expanded" : ""}`}
                 onClick={(e) => { e.stopPropagation(); toggleTitleExpand(t.id, e); }}>{t.title}</span>
               <span className="add-panel-time">{formatTime(getElapsed(t))}</span>
