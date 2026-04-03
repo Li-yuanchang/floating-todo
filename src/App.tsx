@@ -960,7 +960,7 @@ export default function App() {
           </button>
         </div>
         <button className="close-btn" onClick={collapse} title="收起">
-          <X size={13} />
+          <ChevronDown size={14} />
         </button>
       </div>
 
