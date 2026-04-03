@@ -336,7 +336,7 @@ body {
   font-size: 12px;
   color: var(--text);
   will-change: transform;
-  animation: marquee-scroll 12s linear infinite;
+  animation: marquee-scroll 25s linear infinite;
 }
 
 .static-text {
@@ -349,7 +349,8 @@ body {
 }
 
 @keyframes marquee-scroll {
-  0%   { transform: translateX(60px); }
+  0%   { transform: translateX(0); }
+  15%  { transform: translateX(0); }
   100% { transform: translateX(-100%); }
 }
 
