@@ -227,39 +227,6 @@ body {
   color: white;
 }
 
-/* macOS notification close button */
-.running-list-row {
-  position: relative;
-}
-
-.notify-close-btn {
-  position: absolute;
-  top: 1px;
-  right: 2px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.3);
-  color: white;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  z-index: 10;
-  backdrop-filter: blur(4px);
-  transition: background 0.15s;
-  line-height: 0;
-}
-
-.notify-close-btn:hover {
-  background: rgba(0, 0, 0, 0.5);
-}
-
-.running-list-row:hover .notify-close-btn {
-  display: flex;
-}
 
 .bar-add {
   background: #007AFF;
