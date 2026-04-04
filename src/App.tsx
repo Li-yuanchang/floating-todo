@@ -999,7 +999,7 @@ export default function App() {
                 onClick={async (e) => { e.stopPropagation(); await invoke("delete_todo", { id: t.id }); await loadData(); }}
                 title="删除"
               >
-                <X size={8} />
+                <X size={7} />
               </button>
             </div>
           ))}
