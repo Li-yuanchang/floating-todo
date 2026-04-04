@@ -885,9 +885,11 @@ export default function App() {
                 const show = !showRunningList;
                 setShowRunningList(show);
                 if (show) {
+                  setExpandedTitleIds(new Set());
                   const panelH = barH + 4 + runningTodos.length * 28 + 4;
                   appWindow.setSize(new LogicalSize(collapsedBarW, panelH)).catch(() => {});
                 } else {
+                  setExpandedTitleIds(new Set());
                   appWindow.setSize(new LogicalSize(collapsedBarW, barH)).catch(() => {});
                 }
               }}
@@ -985,6 +987,13 @@ export default function App() {
               <span className={`add-panel-title ${expandedTitleIds.has(t.id) ? "expanded" : ""}`}
                 onClick={(e) => { e.stopPropagation(); toggleTitleExpand(t.id, e); }}>{t.title}</span>
               <span className="add-panel-time">{formatTime(getElapsed(t))}</span>
+              <button
+                className="bar-btn bar-delete"
+                onClick={async (e) => { e.stopPropagation(); await invoke("delete_todo", { id: t.id }); await loadData(); }}
+                title="删除"
+              >
+                <Trash2 size={10} />
+              </button>
               <button
                 className="bar-btn bar-complete"
                 onClick={(e) => { e.stopPropagation(); handleComplete(t.id); }}

@@ -227,6 +227,17 @@ body {
   color: white;
 }
 
+.bar-delete {
+  background: transparent;
+  color: #FF3B30;
+  opacity: 0.5;
+}
+
+.bar-delete:hover {
+  background: rgba(255, 59, 48, 0.15);
+  opacity: 1;
+}
+
 .bar-add {
   background: #007AFF;
   color: white;
