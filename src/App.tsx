@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
-import { appWindow, LogicalSize } from "@tauri-apps/api/window";
+import { appWindow, LogicalSize, LogicalPosition, currentMonitor } from "@tauri-apps/api/window";
 import { save, open } from "@tauri-apps/api/dialog";
 import {
   ClipboardCheck, X, Pause, Play, Check, RotateCcw, Archive,
@@ -79,6 +79,7 @@ const EXPANDED_H = 520;
 
 type ThemeMode = "system" | "light" | "dark";
 type ViewMode = "collapsed" | "input" | "list" | "stats" | "settings";
+type WindowPosition = "top-left" | "top-center" | "top-right" | "center-left" | "center" | "center-right" | "bottom-left" | "bottom-center" | "bottom-right";
 
 export default function App() {
   const [mode, setMode] = useState<ViewMode>("collapsed");
@@ -166,6 +167,13 @@ export default function App() {
     setMarqueeSpeed(v);
     localStorage.setItem("marquee-speed", String(v));
   };
+  const [windowPosition, setWindowPosition] = useState<WindowPosition>(() => {
+    return (localStorage.getItem("window-position") as WindowPosition) || "top-right";
+  });
+  const updateWindowPosition = (v: WindowPosition) => {
+    setWindowPosition(v);
+    localStorage.setItem("window-position", v);
+  };
 
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     return (localStorage.getItem("theme") as ThemeMode) || "system";
@@ -200,6 +208,35 @@ export default function App() {
     } catch (e) {
       console.error(e);
     }
+  }, []);
+
+  // Apply initial window position on startup
+  useEffect(() => {
+    const applyWindowPosition = async () => {
+      try {
+        const monitor = await currentMonitor();
+        if (!monitor) return;
+        const screenW = monitor.size.width / monitor.scaleFactor;
+        const screenH = monitor.size.height / monitor.scaleFactor;
+        const pos = localStorage.getItem("window-position") || "top-right";
+        const margin = 20;
+        const winW = DEFAULT_BAR_W;
+        const winH = DEFAULT_BAR_H;
+        let x = margin, y = margin;
+        if (pos.includes("center") && !pos.includes("left") && !pos.includes("right")) {
+          x = (screenW - winW) / 2;
+        } else if (pos.includes("right")) {
+          x = screenW - winW - margin;
+        }
+        if (pos === "center" || pos === "center-left" || pos === "center-right") {
+          y = (screenH - winH) / 2;
+        } else if (pos.includes("bottom")) {
+          y = screenH - winH - margin;
+        }
+        await appWindow.setPosition(new LogicalPosition(Math.round(x), Math.round(y)));
+      } catch (_) {}
+    };
+    applyWindowPosition();
   }, []);
 
   useEffect(() => {
@@ -1096,6 +1133,30 @@ export default function App() {
                   onChange={(e) => updateMarqueeSpeed(Number(e.target.value))}
                   className="opacity-slider"
                 />
+              </div>
+            </div>
+          </div>
+
+          <div className="settings-section">
+            <div className="settings-label">启动位置</div>
+            <div className="settings-group">
+              <div className="settings-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+                <div style={{ fontSize: 12, color: "var(--text-dim)" }}>应用启动时悬浮窗的初始位置（重启生效）</div>
+                <div className="position-grid">
+                  {([
+                    ["top-left", "↖ 左上"], ["top-center", "↑ 上中"], ["top-right", "↗ 右上"],
+                    ["center-left", "← 左中"], ["center", "● 居中"], ["center-right", "→ 右中"],
+                    ["bottom-left", "↙ 左下"], ["bottom-center", "↓ 下中"], ["bottom-right", "↘ 右下"],
+                  ] as [WindowPosition, string][]).map(([pos, label]) => (
+                    <button
+                      key={pos}
+                      className={`position-btn ${windowPosition === pos ? "active" : ""}`}
+                      onClick={() => updateWindowPosition(pos)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

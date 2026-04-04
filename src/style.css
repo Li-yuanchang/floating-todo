@@ -1031,6 +1031,37 @@ body {
   transform: scale(0.95);
 }
 
+/* ── Position grid ── */
+.position-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.position-btn {
+  padding: 6px 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.position-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.position-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
 /* ── Toast notification ── */
 .toast {
   position: absolute;
