@@ -988,18 +988,18 @@ export default function App() {
                 onClick={(e) => { e.stopPropagation(); toggleTitleExpand(t.id, e); }}>{t.title}</span>
               <span className="add-panel-time">{formatTime(getElapsed(t))}</span>
               <button
-                className="bar-btn bar-delete"
-                onClick={async (e) => { e.stopPropagation(); await invoke("delete_todo", { id: t.id }); await loadData(); }}
-                title="删除"
-              >
-                <Trash2 size={10} />
-              </button>
-              <button
                 className="bar-btn bar-complete"
                 onClick={(e) => { e.stopPropagation(); handleComplete(t.id); }}
                 title="完成"
               >
                 <Check size={10} />
+              </button>
+              <button
+                className="notify-close-btn"
+                onClick={async (e) => { e.stopPropagation(); await invoke("delete_todo", { id: t.id }); await loadData(); }}
+                title="删除"
+              >
+                <X size={8} />
               </button>
             </div>
           ))}
