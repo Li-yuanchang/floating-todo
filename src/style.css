@@ -118,6 +118,7 @@ body {
   flex-shrink: 0;
   transition: transform 0.12s;
   padding: 0;
+  padding-bottom: 1px;
 }
 
 .fab:hover { opacity: 0.8; }
