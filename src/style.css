@@ -239,7 +239,10 @@ body {
   margin-top: 4px;
   border-radius: 10px;
   padding: 4px 0;
-  overflow: visible;
+  overflow-x: clip;
+  overflow-y: visible;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .add-panel-row {
