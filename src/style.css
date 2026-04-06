@@ -244,7 +244,7 @@ body {
 
 .add-panel-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
   padding: 6px 10px;
   cursor: pointer;
@@ -252,9 +252,13 @@ body {
   transition: background 0.1s;
 }
 
-.add-panel-row .add-panel-time,
-.add-panel-row .bar-btn,
-.add-panel-row .expand-icon-btn {
+.add-panel-row:has(.add-panel-title.expanded) {
+  align-items: flex-start;
+}
+
+.add-panel-row:has(.add-panel-title.expanded) .add-panel-time,
+.add-panel-row:has(.add-panel-title.expanded) .bar-btn,
+.add-panel-row:has(.add-panel-title.expanded) .expand-icon-btn {
   margin-top: 1px;
 }
 

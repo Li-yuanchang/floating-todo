@@ -886,7 +886,7 @@ export default function App() {
                 setShowRunningList(show);
                 if (show) {
                   setExpandedTitleIds(new Set());
-                  const panelH = barH + 4 + runningTodos.length * 28 + 4;
+                  const panelH = barH + 4 + 4 + runningTodos.length * 28 + 4;
                   appWindow.setSize(new LogicalSize(collapsedBarW, panelH)).catch(() => {});
                 } else {
                   setExpandedTitleIds(new Set());
