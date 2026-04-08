@@ -338,7 +338,8 @@ export default function App() {
     const check = () => {
       if (textMeasureRef.current && displayTodo) {
         const el = textMeasureRef.current;
-        setNeedsMarquee(el.scrollWidth > el.clientWidth);
+        const child = el.firstElementChild as HTMLElement;
+        setNeedsMarquee(child ? child.scrollWidth > el.clientWidth : false);
       } else {
         setNeedsMarquee(false);
       }
@@ -424,6 +425,8 @@ export default function App() {
   // Window resize
   const resizeWindow = async (w: number, h: number) => {
     try {
+      await appWindow.setResizable(true);
+      await appWindow.setMinSize(new LogicalSize(320, 300));
       await appWindow.setSize(new LogicalSize(w, h));
     } catch (e) {
       console.error(e);
@@ -451,10 +454,11 @@ export default function App() {
     setMode("collapsed");
     setInput("");
     setSelectedTagIds([]);
+    await appWindow.setResizable(false).catch(() => {});
     if (runningTodos.length > 0) {
-      await resizeWindow(collapsedBarW, barH);
+      await appWindow.setSize(new LogicalSize(collapsedBarW, barH)).catch(() => {});
     } else {
-      await resizeWindow(barH + 14, barH + 14);
+      await appWindow.setSize(new LogicalSize(barH + 14, barH + 14)).catch(() => {});
     }
   };
 
@@ -1571,7 +1575,7 @@ export default function App() {
                   completedTodos.map((todo) => (
                     <div key={todo.id} className="todo-item completed">
                       <div className="todo-main">
-                        <span className={`todo-title line-through ${expandedTitleIds.has(todo.id) ? "expanded" : ""}`}
+                        <span className={`todo-title ${expandedTitleIds.has(todo.id) ? "expanded" : ""}`}
                           onClick={(e) => toggleTitleExpand(todo.id, e)}>{todo.title}</span>
                         <div className="todo-tags">
                           {todo.tags.map((t) => (
@@ -1636,9 +1640,9 @@ export default function App() {
               </div>
               <label className="edit-label">耗时</label>
               <div className="edit-time-row">
-                <input type="number" className="edit-time-input" min={0} value={editH} onChange={(e) => setEditH(Math.max(0, Number(e.target.value)))} /><span className="edit-time-sep">时</span>
-                <input type="number" className="edit-time-input" min={0} max={59} value={editM} onChange={(e) => setEditM(Math.max(0, Math.min(59, Number(e.target.value))))} /><span className="edit-time-sep">分</span>
-                <input type="number" className="edit-time-input" min={0} max={59} value={editS} onChange={(e) => setEditS(Math.max(0, Math.min(59, Number(e.target.value))))} /><span className="edit-time-sep">秒</span>
+                <input type="text" inputMode="numeric" pattern="[0-9]*" className="edit-time-input" value={editH || ""} onChange={(e) => { const v = e.target.value.replace(/\D/g, ""); setEditH(v === "" ? 0 : Math.max(0, Number(v))); }} onFocus={(e) => { e.target.select(); if (editH === 0) (e.target as HTMLInputElement).value = ""; }} onBlur={(e) => { if (e.target.value.trim() === "") setEditH(0); }} /><span className="edit-time-sep">时</span>
+                <input type="text" inputMode="numeric" pattern="[0-9]*" className="edit-time-input" value={editM || ""} onChange={(e) => { const v = e.target.value.replace(/\D/g, ""); setEditM(v === "" ? 0 : Math.min(59, Math.max(0, Number(v)))); }} onFocus={(e) => { e.target.select(); if (editM === 0) (e.target as HTMLInputElement).value = ""; }} onBlur={(e) => { if (e.target.value.trim() === "") setEditM(0); }} /><span className="edit-time-sep">分</span>
+                <input type="text" inputMode="numeric" pattern="[0-9]*" className="edit-time-input" value={editS || ""} onChange={(e) => { const v = e.target.value.replace(/\D/g, ""); setEditS(v === "" ? 0 : Math.min(59, Math.max(0, Number(v)))); }} onFocus={(e) => { e.target.select(); if (editS === 0) (e.target as HTMLInputElement).value = ""; }} onBlur={(e) => { if (e.target.value.trim() === "") setEditS(0); }} /><span className="edit-time-sep">秒</span>
               </div>
             </div>
             <div className="edit-footer">

@@ -5,13 +5,13 @@
 }
 
 :root {
-  --bg: rgba(246, 246, 246, 0.88);
-  --bg-solid: #f6f6f6;
-  --bar-bg-rgb: 246, 246, 246;
+  --bg: rgba(255, 255, 255, 0.92);
+  --bg-solid: #ffffff;
+  --bar-bg-rgb: 255, 255, 255;
   --card: #ffffff;
-  --text: #1d1d1f;
-  --text-dim: #86868b;
-  --border: rgba(0, 0, 0, 0.12);
+  --text: #1a1a1a;
+  --text-dim: #6e6e73;
+  --border: rgba(0, 0, 0, 0.1);
   --accent: #34C759;
   --accent-bg: rgba(52, 199, 89, 0.1);
   --hover: rgba(0, 0, 0, 0.04);
@@ -412,7 +412,8 @@ body {
 /* ── Expanded container ── */
 .expanded-container {
   width: 400px;
-  height: 520px;
+  min-height: 300px;
+  height: 100vh;
   background: var(--bg-solid);
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -650,7 +651,7 @@ body {
 }
 
 .todo-item.completed {
-  opacity: 0.55;
+  opacity: 0.75;
   background: transparent;
 }
 
@@ -702,7 +703,6 @@ body {
 }
 
 .line-through {
-  text-decoration: line-through;
   color: var(--text-dim);
 }
 

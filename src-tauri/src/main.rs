@@ -237,6 +237,7 @@ fn main() {
         .manage(app_state)
         .setup(|app| {
             #[cfg(target_os = "macos")]
+            #[allow(deprecated)]
             {
                 use cocoa::appkit::NSWindow;
                 let win = app.get_window("main").unwrap();
